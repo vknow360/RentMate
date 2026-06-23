@@ -32,13 +32,14 @@ Final
 
 ## **TEAM MEMBERS** 
 
-**Priyanshu Singh** — Frontend Development & UI/UX **Alokit Mishra** — Backend Development 
+**Priyanshu Singh** — Frontend Development & UI/UX 
+
+**Alokit Mishra** — Backend Development 
 
 **Sunny Kumar Gupta** — Database & API Development 
 
 **Prakhar Pandey** — Project Coordination, Testing & Documentation 
 
-Confidential  ·  Team FantasticFour  ·  Gryork TechPreneur Training Program 
 
 **RentMate  Product Requirements Document** 
 

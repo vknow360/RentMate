@@ -2,21 +2,21 @@
 
 ## Team Roles & Feature Distribution
 
-**Student 1 (Full Stack & AI) - [@github_handle1]**
-- **Features:** AI Roommate Matching integration (Gemini), overall system architecture, Admin panel.
-- **Responsibilities:** Backend services, third-party API integration, ensuring DoD compliance across phases.
+**Priyanshu Singh (Frontend Development & UI/UX)**
+- **Features:** Authentication UI, Property Search & Filtering UI, Property Details, Expense Splitter logic UI.
+- **Responsibilities:** Tailwind CSS v4 setup, responsive design, non-gradient solid color UI adherence, Context API state management, UI polish.
 
-**Student 2 (Frontend Developer) - [@github_handle2]**
-- **Features:** Authentication UI, Property Search & Filtering UI, Property Details.
-- **Responsibilities:** Tailwind CSS v4 setup, responsive design, non-gradient solid color UI adherence, Context API state management.
+**Alokit Mishra (Backend Development)**
+- **Features:** Authentication API, Property CRUD endpoints, overall system architecture, Admin panel.
+- **Responsibilities:** Backend services, Express routing, security (Helmet/CORS).
 
-**Student 3 (Backend Developer) - [@github_handle3]**
-- **Features:** Authentication API, Property CRUD endpoints, Cloudinary integration, Database modeling.
-- **Responsibilities:** Express routing, Mongoose schemas, data validation, security (Helmet/CORS).
+**Sunny Kumar Gupta (Database & API Development)**
+- **Features:** Cloudinary integration, Database modeling, AI Roommate Matching integration (Gemini).
+- **Responsibilities:** Mongoose schemas, data validation, third-party API integration.
 
-**Student 4 (UI/UX & Features) - [@github_handle4]**
-- **Features:** Expense Splitter logic, Notifications system, Wishlist & Inquiries, Reviews & Ratings.
-- **Responsibilities:** Testing edge cases, UI polish, ensuring user flows are intuitive.
+**Prakhar Pandey (Project Coordination, Testing & Documentation)**
+- **Features:** Notifications system, Wishlist & Inquiries, Reviews & Ratings.
+- **Responsibilities:** Project coordination, testing edge cases, ensuring user flows are intuitive, ensuring DoD compliance across phases, documentation.
 
 ## Git Branching Strategy
 

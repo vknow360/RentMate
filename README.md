@@ -9,10 +9,10 @@
 
 | Name | Role | TECH ID |
 | :--- | :--- | :--- |
-| [Student 1 Name] | Full Stack Developer / Team Lead | [TECH ID 1] |
-| [Student 2 Name] | Frontend Developer | [TECH ID 2] |
-| [Student 3 Name] | Backend Developer | [TECH ID 3] |
-| [Student 4 Name] | UI/UX & QA | [TECH ID 4] |
+| Priyanshu Singh | Frontend Development & UI/UX | [TECH ID 1] |
+| Alokit Mishra | Backend Development | [TECH ID 2] |
+| Sunny Kumar Gupta | Database & API Development | [TECH ID 3] |
+| Prakhar Pandey | Project Coordination, Testing & Documentation | [TECH ID 4] |
 
 ## Tech Stack
 - **Frontend:** React, Vite, Tailwind CSS v4, React Router, Context API
