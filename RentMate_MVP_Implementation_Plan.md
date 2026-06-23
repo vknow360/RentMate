@@ -14,6 +14,7 @@ Purpose of this document: translate the PRD into an unambiguous, sequenced build
 4. Anything under **"Explicit Non-Goals"** (Section 2) must NOT be built, even if it seems easy to add. Scope creep is the main MVP risk.
 5. Secrets (API keys, DB URIs, JWT secret) go in `.env`, never hardcoded, never committed. A `.env.example` must be created.
 6. Every API endpoint must return JSON in the consistent envelope defined in Section 9.4.
+7. **UI Design Rule — No Gradients.** The frontend must use **solid colors and their shades only** — no gradient backgrounds, no gradient text, no gradient buttons, nowhere. Gradients look "vibecoded" and unprofessional. Use a clean, flat color palette with tonal variations (e.g. a primary color at different lightness levels for hover/active/disabled states). Shadows, borders, and subtle opacity changes are fine for depth — just no `linear-gradient` or `radial-gradient` in the CSS.
 
 ---
 
@@ -21,7 +22,7 @@ Purpose of this document: translate the PRD into an unambiguous, sequenced build
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Frontend | React.js (Vite) + Tailwind CSS | Framer Motion optional polish, add only after core flows work |
+| Frontend | React.js (Vite) + Tailwind CSS v4 | Framer Motion optional polish, add only after core flows work |
 | Backend | Node.js + Express.js | REST API only |
 | Database | MongoDB (Atlas free tier) | Mongoose ODM |
 | Auth | JWT (access token only) | bcrypt for password hashing |
@@ -196,6 +197,8 @@ If the person building this later wants any of the above, treat it as a Phase 2/
   ownerId: { type: ObjectId, ref: 'User', required: true },
   message: String,
   status: { type: String, enum: ['pending','responded','closed'], default: 'pending' },
+  response: String, // owner's reply text
+  respondedAt: Date, // when the owner responded
   createdAt: Date, default now
 }
 ```
@@ -219,7 +222,7 @@ All protected routes require `Authorization: Bearer <token>` header. Role-gated 
 | Users | GET | `/api/users/me` | any | current profile |
 | Users | PUT | `/api/users/me` | any | update profile + preferences |
 | Users | POST | `/api/users/me/avatar` | any | Cloudinary upload, multipart |
-| Properties | GET | `/api/properties` | none | query params: city, college, minRent, maxRent, type, sharingType, amenities, page, limit |
+| Properties | GET | `/api/properties` | none | query params: city, college, minRent, maxRent, type, sharingType, amenities, page, limit. **With `owner=me`** (authenticated owner): returns owner's own listings including unverified |
 | Properties | GET | `/api/properties/:id` | none | full detail |
 | Properties | POST | `/api/properties` | owner | create listing (defaults isVerified=false) |
 | Properties | PUT | `/api/properties/:id` | owner (own listing) | edit |
@@ -237,10 +240,13 @@ All protected routes require `Authorization: Bearer <token>` header. Role-gated 
 | Expenses | GET | `/api/expenses/balances?groupId=` | student | computed net balances per person |
 | Expenses | PUT | `/api/expenses/:id` | student (creator) | |
 | Expenses | DELETE | `/api/expenses/:id` | student (creator) | |
+| Expenses | GET | `/api/expenses/groups` | student | returns distinct groupIds the current user belongs to |
 | Reviews | POST | `/api/reviews` | student (isVerified=true only) | |
 | Reviews | GET | `/api/reviews/:propertyId` | none | |
 | Inquiries | POST | `/api/inquiries` | student | creates inquiry, also creates a Notification for owner |
 | Inquiries | GET | `/api/inquiries/owner` | owner | inquiries on owner's listings |
+| Inquiries | PUT | `/api/inquiries/:id` | owner | update status (`responded`/`closed`), optionally add a `response` text |
+| Inquiries | GET | `/api/inquiries/mine` | student | student's own sent inquiries with owner responses |
 | Notifications | GET | `/api/notifications` | any | most recent first |
 | Notifications | PUT | `/api/notifications/:id/read` | any | |
 | Admin | GET | `/api/admin/listings/pending` | admin | unverified properties |
@@ -337,6 +343,12 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
 - All expenses with the same `groupId` are considered one household.
 - `splitBetween` is an explicit array of user IDs chosen by the creator each time an expense is added (simplest correct approach — no need to build a separate "household" entity for MVP).
 - `GET /api/expenses/balances?groupId=` computes: for each user, `totalPaid - totalOwed`, where `totalOwed` = sum over expenses of `amount / splitBetween.length` for each expense they're included in.
+- `GET /api/expenses/groups` returns all distinct `groupId` values from expenses where the current user appears in `splitBetween` or `paidBy` — this powers the frontend group selector dropdown.
+
+**Frontend UX for groupId:**
+  - When a student first creates an expense, they either type a new group name (free-text input) or select from a dropdown of their existing groups (populated via `GET /api/expenses/groups`).
+  - The "Add Expense" form includes a `splitBetween` multi-select populated from users who share at least one expense in the same group (or manually entered by user ID / email for new groups).
+  - This avoids needing a separate "Create Group" / "Join Group" flow — groups emerge organically from shared expenses.
 
 ### 5.6 Reviews
 - Only allowed if `req.user.isVerified === true` and `req.user.role === 'student'`.
@@ -346,6 +358,18 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
 ### 5.7 Maps
 - Use Google Maps **Embed API** (`https://www.google.com/maps/embed/v1/place?key=...&q=lat,lng`) for property detail page — far simpler than full JS API, no need for client-side map library, fits "interactive map" requirement at MVP cost/effort.
 - Store `latitude`/`longitude` on Property at creation (owner can drop a pin or paste coordinates manually for MVP — full geocoding-from-address is a nice-to-have, not required).
+
+### 5.8 Image Upload (Cloudinary via Multer)
+- Use `multer` with **memory storage** (`multer.memoryStorage()`) — do NOT use disk storage, as Render's filesystem is ephemeral.
+- Middleware chain: `multer` parses the multipart form data into `req.file` / `req.files` (buffers in memory) → a custom middleware uploads each buffer to Cloudinary via `cloudinary.uploader.upload_stream()` → attaches the returned Cloudinary URL(s) to `req.body` (or a custom field like `req.cloudinaryUrls`) before the controller runs.
+- Wrap this in a `services/cloudinary.js` helper that exports both the configured Cloudinary instance and the upload-stream utility.
+- Image size limit: 5 MB per file (enforced via `multer`'s `limits` option).
+- Accepted formats: `jpeg`, `png`, `webp` (validate via `multer`'s `fileFilter`).
+
+### 5.9 CORS
+- CORS is configured as `cors({ origin: '*' })` — open to all origins.
+- This is acceptable for an MVP/demo and avoids frontend development friction. Production would restrict to specific origins.
+- Set up in Phase 0 `server.js` alongside `helmet` — both should be applied before any route handlers.
 
 ---
 
@@ -370,8 +394,8 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
     .env.example
   README.md
   ```
-- Backend deps: `express mongoose bcryptjs jsonwebtoken dotenv cors multer cloudinary @google/generative-ai express-validator`
-- Frontend deps: `react react-router-dom axios tailwindcss`
+- Backend deps: `express mongoose bcryptjs jsonwebtoken dotenv cors helmet multer cloudinary @google/generative-ai express-validator`
+- Frontend deps: `react react-router-dom axios tailwindcss@latest @tailwindcss/vite`
 - `.env.example` (backend):
   ```
   PORT=5000
@@ -383,6 +407,7 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
   CLOUDINARY_API_SECRET=
   CLIENT_URL=
   ```
+- Configure `server.js` with middleware in this order: `helmet()`, `cors({ origin: '*' })`, `express.json()`, then route handlers.
 - **DoD:** server boots, connects to MongoDB Atlas, returns 200 on a `/api/health` route. Frontend boots and renders a placeholder home page.
 
 ### Phase 1 — Auth & User Profiles
@@ -398,7 +423,7 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
 ### Phase 3 — Wishlist + Inquiries
 - Wishlist model/endpoints + heart/save button on property cards and detail page.
 - Inquiry model/endpoints; "Contact Owner" form on detail page; owner inquiry inbox page.
-- **DoD:** student can save/unsave properties, see a wishlist page; student can send an inquiry; owner sees it in their inbox.
+- **DoD:** student can save/unsave properties, see a wishlist page; student can send an inquiry; owner sees it in their inbox and can reply/update status; student can view their sent inquiries with any owner responses.
 
 ### Phase 4 — Roommate Matching (AI)
 - Implement Gemini service (`services/gemini.js`) with the prompt from 5.3, including JSON-parse validation and the rule-based fallback.
@@ -418,7 +443,7 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
 
 ### Phase 7 — Admin Panel
 - Admin-only routes from Section 4.
-- Frontend: simple admin dashboard — pending listings table with "Verify" button, users table with "Verify"/"Remove" actions, analytics counts as cards.
+- Frontend: simple admin dashboard — pending listings table with "Verify" and "Remove" buttons, users table with "Verify"/"Remove" actions, all listings management table with "Remove" action, analytics counts as cards.
 - Seed one admin user via a one-off script (`backend/src/scripts/seedAdmin.js`) — do not expose admin registration through the public `/register` endpoint.
 - **DoD:** admin can verify a pending listing, after which it appears in public search; admin can verify a student, after which that student can post reviews; analytics counts match DB reality.
 
@@ -432,7 +457,7 @@ The PRD doesn't define how roommates get grouped for expense-splitting. Decision
 - Confirm response envelope consistency across all routes (Section 9.4 pattern... see note below, this doc calls it 4.x but kept here for clarity — the JSON envelope defined at the top of Section 4).
 - Add indexes per 5.2.
 - Deploy backend to Render (free web service, env vars set in dashboard), frontend to Vercel, DB on Atlas M0, images on Cloudinary free tier.
-- Update `CLIENT_URL`/CORS config to the deployed frontend origin.
+- Confirm CORS is set to `*` (wildcard) as configured in Phase 0. Set `CLIENT_URL` env var to the deployed frontend origin (used for non-CORS purposes such as links in notifications).
 - **DoD:** full user journey (register → verify via admin → search → wishlist → inquiry → roommate match → expense → review) works end-to-end on the deployed URLs, not just localhost.
 
 ---
