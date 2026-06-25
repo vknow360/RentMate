@@ -10,6 +10,17 @@ exports.getMatches = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 12;
     const skip = (page - 1) * limit;
 
+    let totalCount = await RoommateMatch.countDocuments({ 
+      $or: [{ studentA: currentUserId }, { studentB: currentUserId }] 
+    });
+
+    if (totalCount === 0) {
+      await recomputeMatchesForUser(currentUserId);
+      totalCount = await RoommateMatch.countDocuments({ 
+        $or: [{ studentA: currentUserId }, { studentB: currentUserId }] 
+      });
+    }
+
     const pipeline = [
       { $match: { $or: [{ studentA: currentUserId }, { studentB: currentUserId }] } },
       { $addFields: { candidateId: { $cond: [{ $eq: ['$studentA', currentUserId] }, '$studentB', '$studentA'] } } },
@@ -29,10 +40,6 @@ exports.getMatches = async (req, res) => {
     ];
 
     const matches = await RoommateMatch.aggregate(pipeline);
-    
-    const totalCount = await RoommateMatch.countDocuments({ 
-      $or: [{ studentA: currentUserId }, { studentB: currentUserId }] 
-    });
 
     res.status(200).json({ 
       success: true, 

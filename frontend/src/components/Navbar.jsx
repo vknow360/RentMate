@@ -7,6 +7,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -82,22 +83,79 @@ const Navbar = () => {
 
                 <button 
                   onClick={handleLogout}
-                  className="bg-bg-surface border border-glass-border hover:bg-accent-warm hover:text-bg-base text-text-primary px-4 py-2 rounded-md transition-all duration-300 hover-lift font-medium"
+                  className="hidden md:block bg-bg-surface border border-glass-border hover:bg-accent-warm hover:text-bg-base text-text-primary px-4 py-2 rounded-md transition-all duration-300 hover-lift font-medium"
                 >
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-text-primary hover:text-accent-warm px-3 py-2 rounded-md transition-all duration-300 hover-lift">Login</Link>
-                <Link to="/register" className="bg-accent-sky text-bg-base hover:bg-opacity-90 px-4 py-2 rounded-md transition-all duration-300 hover-lift font-medium shadow-[0_0_15px_rgba(56,189,248,0.4)]">
-                  Register
-                </Link>
+                <div className="hidden md:flex items-center gap-4">
+                  <Link to="/login" className="text-text-primary hover:text-accent-warm px-3 py-2 rounded-md transition-all duration-300 hover-lift">Login</Link>
+                  <Link to="/register" className="bg-accent-sky text-bg-base hover:bg-opacity-90 px-4 py-2 rounded-md transition-all duration-300 hover-lift font-medium shadow-[0_0_15px_rgba(56,189,248,0.4)]">
+                    Register
+                  </Link>
+                </div>
               </>
             )}
+
+            {/* Hamburger Toggle Button (Mobile only) */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden p-2 rounded-md text-text-primary hover:text-accent-warm hover:bg-bg-surface transition-all duration-300"
+              aria-label="Toggle menu"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isOpen && (
+        <div className="md:hidden px-4 pt-2 pb-4 space-y-1 border-t border-glass-border bg-bg-surface rounded-b-md">
+          {user ? (
+            <>
+              {user.role === 'student' && (
+                <>
+                  <Link to="/properties" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Properties</Link>
+                  <Link to="/roommates" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Find Roommates</Link>
+                  <Link to="/expenses" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Expenses</Link>
+                  <Link to="/wishlist" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Wishlist</Link>
+                </>
+              )}
+              {user.role === 'owner' && (
+                <Link to="/manage-listings" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">My Listings</Link>
+              )}
+              {user.role === 'admin' && (
+                <Link to="/admin" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Admin Dashboard</Link>
+              )}
+              <Link to="/inquiries" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Inquiries</Link>
+              <Link to="/profile" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Profile</Link>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleLogout();
+                }}
+                className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-accent-warm hover:bg-bg-base transition-all duration-300"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Login</Link>
+              <Link to="/register" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Register</Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 };

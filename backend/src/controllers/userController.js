@@ -12,14 +12,18 @@ exports.getMe = async (req, res) => {
 
 exports.updateMe = async (req, res) => {
   try {
-    const { name, phone, preferences, isLookingForRoommate } = req.body;
+    const { name, phone, preferences, isLookingForRoommate, preferredCity } = req.body;
     
     const user = await User.findById(req.user._id);
+    const oldCity = user.preferredCity;
     
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (typeof isLookingForRoommate !== 'undefined') {
       user.isLookingForRoommate = isLookingForRoommate;
+    }
+    if (typeof preferredCity !== 'undefined') {
+      user.preferredCity = preferredCity;
     }
     
     if (preferences) {
@@ -27,6 +31,21 @@ exports.updateMe = async (req, res) => {
     }
 
     await user.save();
+
+    // If they changed cities or stopped looking, clean up stale matches
+    if ((oldCity && preferredCity && oldCity !== preferredCity) || 
+        isLookingForRoommate === false) {
+      const RoommateMatch = require('../models/RoommateMatch');
+      await RoommateMatch.deleteMany({
+        $or: [{ studentA: user._id }, { studentB: user._id }]
+      });
+    }
+
+    // Background recompute
+    if (user.isLookingForRoommate && user.preferredCity) {
+      const { recomputeMatchesForUser } = require('../services/roommateService');
+      recomputeMatchesForUser(user._id).catch(console.error);
+    }
     
     // Return updated user without password
     const updatedUser = await User.findById(req.user._id).select('-password');
