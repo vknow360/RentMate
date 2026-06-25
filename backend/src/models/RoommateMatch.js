@@ -10,5 +10,7 @@ const roommateMatchSchema = new mongoose.Schema({
 
 // Ensure A.id < B.id so we don't have duplicate pairs (e.g. A-B and B-A)
 roommateMatchSchema.index({ studentA: 1, studentB: 1 }, { unique: true });
+roommateMatchSchema.index({ studentA: 1, compatibilityScore: -1 });
+roommateMatchSchema.index({ studentB: 1, compatibilityScore: -1 });
 
 module.exports = mongoose.model('RoommateMatch', roommateMatchSchema);

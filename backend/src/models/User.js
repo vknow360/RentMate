@@ -23,8 +23,11 @@ const userSchema = new mongoose.Schema({
     bio: String
   },
   isLookingForRoommate: { type: Boolean, default: false },
+  preferredCity: { type: String },
   isSuspended: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
+
+userSchema.index({ preferredCity: 1, isLookingForRoommate: 1 });
 
 module.exports = mongoose.model('User', userSchema);

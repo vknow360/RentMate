@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import AnimatedSection from '../components/AnimatedSection';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -36,80 +36,98 @@ const Notifications = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-12">Loading notifications...</div>;
-
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  return (
-    <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-        {unreadCount > 0 && (
-          <button 
-            onClick={() => markAsRead('all')}
-            className="text-sm text-primary-600 hover:text-primary-800 font-medium"
-          >
-            Mark all as read
-          </button>
-        )}
-      </div>
+  if (loading) return (
+    <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
+      <div className="w-16 h-16 border-4 border-accent-warm border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        {notifications.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {notifications.map(notification => (
-              <li 
-                key={notification._id} 
-                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? 'bg-primary-50/50' : ''}`}
-                onClick={() => !notification.isRead && markAsRead(notification._id)}
+  return (
+    <div className="min-h-[calc(100vh-64px)] pb-12">
+      <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <AnimatedSection>
+          <div className="flex justify-between items-end mb-8 border-b border-glass-border pb-4">
+            <div>
+              <h1 className="text-3xl font-heading font-bold text-text-primary flex items-center gap-3">
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="bg-error text-bg-base text-sm font-bold px-2.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(255,82,82,0.4)]">
+                    {unreadCount}
+                  </span>
+                )}
+              </h1>
+            </div>
+            {unreadCount > 0 && (
+              <button 
+                onClick={() => markAsRead('all')}
+                className="text-sm font-bold text-accent-warm hover:text-accent-warm-muted transition-colors flex items-center gap-1 hover:bg-accent-warm/10 px-3 py-1.5 rounded-lg"
               >
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 mt-1">
-                    {notification.type === 'inquiry' ? (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                    ) : notification.type === 'roommate_match' ? (
-                      <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                Mark all as read
+              </button>
+            )}
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection delay={100} direction="up">
+          <div className="glass-card overflow-hidden">
+            {notifications.length > 0 ? (
+              <ul className="divide-y divide-glass-border">
+                {notifications.map((notification, idx) => (
+                  <li 
+                    key={notification._id} 
+                    className={`p-6 transition-all duration-300 cursor-pointer flex gap-5 ${!notification.isRead ? 'bg-accent-warm/5 hover:bg-accent-warm/10' : 'hover:bg-bg-surface/50'}`}
+                    onClick={() => !notification.isRead && markAsRead(notification._id)}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {notification.type === 'inquiry' ? (
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-inner ${!notification.isRead ? 'bg-accent-sky/20 text-accent-sky border border-accent-sky/30' : 'bg-bg-surface border border-glass-border text-text-secondary'}`}>
+                          💬
+                        </div>
+                      ) : notification.type === 'roommate_match' ? (
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-inner ${!notification.isRead ? 'bg-accent-violet/20 text-accent-violet border border-accent-violet/30' : 'bg-bg-surface border border-glass-border text-text-secondary'}`}>
+                          ✨
+                        </div>
+                      ) : (
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-inner ${!notification.isRead ? 'bg-accent-rose/20 text-accent-rose border border-accent-rose/30' : 'bg-bg-surface border border-glass-border text-text-secondary'}`}>
+                          🔔
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <p className={`text-base ${!notification.isRead ? 'font-bold text-text-primary' : 'text-text-secondary'}`}>
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-text-tertiary font-medium mt-2 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {new Date(notification.createdAt).toLocaleString(undefined, {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    {!notification.isRead && (
+                      <div className="flex-shrink-0 self-center">
+                        <div className="w-3 h-3 rounded-full bg-accent-warm shadow-[0_0_8px_rgba(212,165,116,0.6)]"></div>
                       </div>
                     )}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  {!notification.isRead && (
-                    <div className="flex-shrink-0 self-center">
-                      <div className="w-2 h-2 rounded-full bg-primary-600"></div>
-                    </div>
-                  )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-16 text-center flex flex-col items-center">
+                <div className="w-20 h-20 bg-bg-surface rounded-full flex items-center justify-center text-3xl mb-6 border border-glass-border animate-float text-accent-teal">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
                 </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="p-8 text-center text-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <p>You're all caught up!</p>
+                <p className="text-text-primary font-bold font-heading text-2xl mb-2">You're all caught up!</p>
+                <p className="text-text-secondary text-lg">No new notifications to show.</p>
+              </div>
+            )}
           </div>
-        )}
+        </AnimatedSection>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const fallbackScorer = (prefA, prefB) => {
+exports.computeCompatibility = (prefA, prefB) => {
   let score = 100;
 
   if (prefA.sleepSchedule !== prefB.sleepSchedule) score -= 25;
@@ -13,6 +13,13 @@ const fallbackScorer = (prefA, prefB) => {
   score -= Math.abs((prefA.noiseTolerance || 3) - (prefB.noiseTolerance || 3)) * 5;
 
   if (prefA.studyHabits !== prefB.studyHabits) score -= 10;
+  
+  // Budget proximity
+  if (prefA.budget && prefB.budget) {
+    const diff = Math.abs(prefA.budget - prefB.budget);
+    if (diff > 5000) score -= 20;
+    else if (diff > 2000) score -= 10;
+  }
 
   score = Math.max(0, Math.min(100, score));
 
@@ -20,6 +27,8 @@ const fallbackScorer = (prefA, prefB) => {
   if (prefA.sleepSchedule === prefB.sleepSchedule) reasons.push('Matching sleep schedules');
   if (prefA.foodPreference === prefB.foodPreference) reasons.push('Similar food preferences');
   if (Math.abs((prefA.cleanliness || 3) - (prefB.cleanliness || 3)) <= 1) reasons.push('Compatible cleanliness standards');
+  if (prefA.budget && prefB.budget && Math.abs(prefA.budget - prefB.budget) <= 2000) reasons.push('Similar budgets');
+  
   if (reasons.length === 0) reasons.push('Some lifestyle differences');
 
   return { compatibilityScore: score, reasons };

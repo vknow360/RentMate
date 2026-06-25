@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import AnimatedBackground from './components/AnimatedBackground';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -21,10 +22,12 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-          <Navbar />
-          <main>
-            <Routes>
+        <div className="min-h-screen relative overflow-hidden">
+          <AnimatedBackground />
+          <div className="relative z-10">
+            <Navbar />
+            <main>
+              <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -112,6 +115,7 @@ function App() {
               />
             </Routes>
           </main>
+          </div>
         </div>
       </Router>
     </AuthProvider>
