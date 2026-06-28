@@ -40,22 +40,24 @@ RentMate operates on a three-tier client-server architecture:
 3. **Data Tier:** MongoDB storing user data, property listings, roommate preferences, expenses, and reviews.
 
 ```mermaid
-architecture-beta
-    group client(cloud)[Client Tier]
-    group backend(server)[Backend API Tier]
-    group db(database)[Data Tier]
+flowchart TD
+    subgraph client [Client Tier]
+        browser[React Web App]
+    end
+    subgraph backend [Backend API Tier]
+        api[Node/Express Server]
+    end
+    subgraph db [Data Tier]
+        mongo[(MongoDB Atlas)]
+    end
     
-    service browser(internet)[React Web App] in client
-    service api(server)[Node/Express Server] in backend
-    service mongo(database)[MongoDB Atlas] in db
+    gemini[Google Gemini API]
+    cloudinary[Cloudinary Storage]
     
-    service gemini(cloud)[Google Gemini API]
-    service cloudinary(cloud)[Cloudinary Storage]
-    
-    browser:R --> L:api
-    api:B --> T:mongo
-    api:R --> L:gemini
-    api:R --> L:cloudinary
+    browser <--> api
+    api <--> mongo
+    api <--> gemini
+    api <--> cloudinary
 ```
 
 ## Technology Stack

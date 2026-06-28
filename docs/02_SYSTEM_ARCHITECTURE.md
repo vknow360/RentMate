@@ -12,22 +12,24 @@ The system consists of the following primary tiers:
 3.  **Data Tier (Database):** A NoSQL database (MongoDB) responsible for persisting application state, including user profiles, property listings, matching scores, expenses, and reviews.
 
 ```mermaid
-architecture-beta
-    group client(cloud)[Client Tier]
-    group backend(server)[Backend API Tier]
-    group db(database)[Data Tier]
+flowchart TD
+    subgraph client [Client Tier]
+        browser[React SPA Vite]
+    end
+    subgraph backend [Backend API Tier]
+        api[Express REST API]
+    end
+    subgraph db [Data Tier]
+        mongo[(MongoDB Atlas)]
+    end
     
-    service browser(internet)[React SPA (Vite)] in client
-    service api(server)[Express REST API] in backend
-    service mongo(database)[MongoDB Atlas] in db
+    gemini[Google Gemini AI]
+    cloudinary[Cloudinary Image Storage]
     
-    service gemini(cloud)[Google Gemini AI]
-    service cloudinary(cloud)[Cloudinary Image Storage]
-    
-    browser:R --> L:api
-    api:B --> T:mongo
-    api:R --> L:gemini
-    api:R --> L:cloudinary
+    browser <--> api
+    api <--> mongo
+    api <--> gemini
+    api <--> cloudinary
 ```
 
 ## Component Architecture
