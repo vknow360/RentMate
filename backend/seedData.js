@@ -56,13 +56,37 @@ const seedData = async () => {
       { name: 'Suspended Student', email: 'suspended.student@rentmate.com', password, role: 'student', phone: '5555555555', isVerified: true, isSuspended: true, preferredCity: 'Delhi' }
     ];
 
+    const indianFirstNames = [
+      "Aarav", "Amit", "Raj", "Sanjay", "Vikram", "Sunil", "Ramesh", "Anil", "Mahesh", "Suresh", "Vijay", 
+      "Deepak", "Sandeep", "Karan", "Rahul", "Neha", "Priya", "Anjali", "Ritu", "Sneha", "Kriti", "Pooja", 
+      "Kiran", "Geeta", "Sunita", "Rohan", "Aditya", "Ishaan", "Dev", "Arjun", "Kabir", "Meera"
+    ];
+    const indianLastNames = [
+      "Sharma", "Verma", "Gupta", "Singh", "Patel", "Kumar", "Joshi", "Mehta", "Reddy", "Rao", "Nair", 
+      "Iyer", "Choudhury", "Das", "Sen", "Roy", "Mishra", "Pandey", "Trivedi", "Gill", "Bahl", "Kapoor"
+    ];
+    const generateIndianName = () => {
+      return `${faker.helpers.arrayElement(indianFirstNames)} ${faker.helpers.arrayElement(indianLastNames)}`;
+    };
+
+    const studentBios = [
+      "Final year student. Looking for a neat and clean roommate. Non-smoker and vegetarian preferred.",
+      "Engineering student. Night owl, loves playing football. Quite chilled out.",
+      "Preparing for exams. Need a quiet environment. Early bird, mostly keeps to myself.",
+      "First year student. Extrovert, loves exploring cafes. Looking for a friendly roommate.",
+      "Looking for a roommate to share an apartment. Chilled out person, loves cooking.",
+      "Medical student. Mostly busy with studies. Cleanliness is a top priority for me.",
+      "Postgrad student. Respectful of privacy, looking for a similar flatmate.",
+      "Commerce student, extrovert. Love listening to music. Very clean and organized."
+    ];
+
     // ============================================
     // 2. Generate Random Owners (Total 25)
     // ============================================
     const fakeOwners = [];
     for (let i = 0; i < 21; i++) {
       fakeOwners.push({
-        name: faker.person.fullName(),
+        name: generateIndianName(),
         email: faker.internet.email().toLowerCase(),
         password,
         role: 'owner',
@@ -192,7 +216,7 @@ const seedData = async () => {
     const fakeStudents = [];
     for (let i = 0; i < 75; i++) {
       fakeStudents.push({
-        name: faker.person.fullName(),
+        name: generateIndianName(),
         email: faker.internet.email().toLowerCase(),
         password,
         role: 'student',
@@ -211,7 +235,7 @@ const seedData = async () => {
           socialType: faker.helpers.arrayElement(socialOptions),
           noiseTolerance: faker.number.int({ min: 1, max: 5 }),
           budget: faker.number.int({ min: 5000, max: 30000 }),
-          bio: faker.person.bio()
+          bio: faker.helpers.arrayElement(studentBios)
         }
       });
     }
@@ -361,6 +385,15 @@ const seedData = async () => {
     const fakeExpenses = [];
     const expenseCategories = ['Rent', 'Electricity', 'Water', 'Internet', 'Groceries', 'Other'];
 
+    const expenseDescriptions = {
+      Rent: ["Monthly room rent share", "PG rent payment", "Apartment rent share"],
+      Electricity: ["AC electricity bill share", "Electricity bill for June", "Room sub-meter reading charge"],
+      Water: ["Drinking water cans supply", "Water tanker charges", "Monthly water bill"],
+      Internet: ["Broadband WiFi monthly recharge", "Airtel fiber subscription", "JioFi router balance"],
+      Groceries: ["Groceries from local Kirana store", "Milk and egg supplies", "Vegetables and cooking essentials"],
+      Other: ["Maid salary share", "Cook salary share", "New room cleaning supplies", "Gas cylinder refilling charges"]
+    };
+
     // We will select a small subset of students to be in groups so we can easily test
     for (const group of householdGroups) {
       // Pick 3-4 random students for this group
@@ -373,12 +406,14 @@ const seedData = async () => {
         const splitBetween = faker.helpers.arrayElements(groupStudents, faker.number.int({ min: 2, max: groupStudents.length })).map(s => s._id);
         if (!splitBetween.includes(paidBy)) splitBetween.push(paidBy); // Make sure payer is in split
 
+        const category = faker.helpers.arrayElement(expenseCategories);
+
         fakeExpenses.push({
           groupId: group,
           createdBy: faker.helpers.arrayElement(groupStudents)._id,
-          category: faker.helpers.arrayElement(expenseCategories),
+          category: category,
           amount: faker.number.int({ min: 500, max: 25000 }),
-          description: faker.lorem.words(3),
+          description: faker.helpers.arrayElement(expenseDescriptions[category] || expenseDescriptions['Other']),
           splitBetween: splitBetween,
           paidBy: paidBy
         });
@@ -392,11 +427,24 @@ const seedData = async () => {
     // ============================================
     const fakeNotifications = [];
     const notifTypes = ['new_listing', 'price_drop', 'vacancy', 'roommate_match', 'inquiry'];
+    const notificationTemplates = [
+      "New PG listing 'Sai Ram PG' added near your college",
+      "Price dropped for Balaji Luxury PG, check it out now!",
+      "Aarav Gupta sent you a roommate compatibility request",
+      "New inquiry received for your listing 'Gulmohar Heights'",
+      "Your student profile verification is complete and approved",
+      "Price dropped by 10% on Krishna PG for Boys",
+      "Vacancy status updated for Sai Residency: 1 room available",
+      "New review posted for Om PG Accommodation",
+      "Neha Singh accepted your roommate invitation",
+      "New message received from owner Rahul Sharma"
+    ];
+
     for (let i = 0; i < 100; i++) {
       fakeNotifications.push({
         userId: faker.datatype.boolean() ? faker.helpers.arrayElement(owners)._id : faker.helpers.arrayElement(students)._id,
         type: faker.helpers.arrayElement(notifTypes),
-        message: faker.lorem.sentence(),
+        message: faker.helpers.arrayElement(notificationTemplates),
         isRead: faker.datatype.boolean({ probability: 0.4 }),
         relatedId: faker.datatype.boolean() ? faker.helpers.arrayElement(properties)._id : undefined
       });
