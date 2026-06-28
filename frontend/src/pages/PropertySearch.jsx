@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import PropertyCard from '../components/PropertyCard';
 import AnimatedSection from '../components/AnimatedSection';
+import AIRecommendations from '../components/AIRecommendations';
 
 const PropertySearch = () => {
   const [properties, setProperties] = useState([]);
@@ -106,6 +107,9 @@ const PropertySearch = () => {
           </div>
         </form>
       </div>
+
+      {/* AI Recommendations — pinned for logged-in students */}
+      <AIRecommendations className="mb-10" />
 
       {/* Results Grid - Full Width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

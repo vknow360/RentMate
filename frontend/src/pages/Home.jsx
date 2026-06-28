@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import AnimatedSection from '../components/AnimatedSection';
 import GlassCard from '../components/GlassCard';
+import AIRecommendations from '../components/AIRecommendations';
 
 const Home = () => {
   return (
@@ -40,6 +41,9 @@ const Home = () => {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* AI Recommendations — only visible to logged-in students */}
+      <AIRecommendations />
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -42,6 +42,7 @@ const expenseRoutes = require('./src/routes/expenses');
 const notificationRoutes = require('./src/routes/notifications');
 const reviewRoutes = require('./src/routes/reviews');
 const adminRoutes = require('./src/routes/admin');
+const recommendationRoutes = require('./src/routes/recommendations');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -54,6 +55,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ success: true, message: 'API is running' });
