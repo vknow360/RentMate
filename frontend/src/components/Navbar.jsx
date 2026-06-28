@@ -60,7 +60,10 @@ const Navbar = () => {
                     </>
                   )}
                   {user.role === 'owner' && (
-                    <NavLink to="/manage-listings">My Listings</NavLink>
+                    <>
+                      <NavLink to="/manage-listings">My Listings</NavLink>
+                      <NavLink to="/owner/analytics">Analytics</NavLink>
+                    </>
                   )}
                   {user.role === 'admin' && (
                     <NavLink to="/admin">Admin Dashboard</NavLink>
@@ -131,7 +134,10 @@ const Navbar = () => {
                 </>
               )}
               {user.role === 'owner' && (
-                <Link to="/manage-listings" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">My Listings</Link>
+                <>
+                  <Link to="/manage-listings" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">My Listings</Link>
+                  <Link to="/owner/analytics" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Analytics</Link>
+                </>
               )}
               {user.role === 'admin' && (
                 <Link to="/admin" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:text-accent-warm hover:bg-bg-base transition-all duration-300">Admin Dashboard</Link>
