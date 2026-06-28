@@ -9,10 +9,10 @@
 
 | Name | Role | TECH ID |
 | :--- | :--- | :--- |
-| Priyanshu Singh | Frontend Development & UI/UX | [TECH ID 1] |
-| Alokit Mishra | Backend Development | [TECH ID 2] |
-| Sunny Kumar Gupta | Database & API Development | [TECH ID 3] |
-| Prakhar Pandey | Project Coordination, Testing & Documentation | [TECH ID 4] |
+| Priyanshu Singh | Frontend Development & UI/UX | [C15E1A] |
+| Alokit Mishra | Backend Development | [C15E2E] |
+| Sunny Kumar Gupta | Database & API Development | [57548E] |
+| Prakhar Pandey | Project Coordination, Testing & Documentation | [BEC1DA] |
 
 ## Tech Stack
 - **Frontend:** React, Vite, Tailwind CSS v4, React Router, Context API
