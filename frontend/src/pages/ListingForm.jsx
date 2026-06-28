@@ -10,6 +10,8 @@ const ListingForm = () => {
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [geocodingLoading, setGeocodingLoading] = useState(false);
+  const [geocodingError, setGeocodingError] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -68,14 +70,60 @@ const ListingForm = () => {
     setImages(e.target.files);
   };
 
+  const handleFetchCoordinates = async () => {
+    const { city, locality } = formData;
+    if (!city || !locality) {
+      setGeocodingError('Please fill in City and Locality/Area fields first.');
+      return;
+    }
+    setGeocodingLoading(true);
+    setGeocodingError('');
+    try {
+      const queryFull = `${locality}, ${city}`;
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryFull)}&limit=1`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          latitude: parseFloat(data[0].lat),
+          longitude: parseFloat(data[0].lon)
+        }));
+      } else {
+        // Fallback to searching only city
+        const resCity = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+        const dataCity = await resCity.json();
+        if (dataCity && dataCity.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            latitude: parseFloat(dataCity[0].lat),
+            longitude: parseFloat(dataCity[0].lon)
+          }));
+          setGeocodingError('Exact locality not found. Coordinates set to city center.');
+        } else {
+          setGeocodingError('Could not find coordinates for this address.');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setGeocodingError('Error fetching coordinates. Please enter them manually.');
+    } finally {
+      setGeocodingLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
       setError('');
       
+      const parsedLat = formData.latitude !== '' ? parseFloat(formData.latitude) : undefined;
+      const parsedLng = formData.longitude !== '' ? parseFloat(formData.longitude) : undefined;
+
       const payload = {
         ...formData,
+        latitude: isNaN(parsedLat) ? undefined : parsedLat,
+        longitude: isNaN(parsedLng) ? undefined : parsedLng,
         amenities: formData.amenities.split(',').map(a => a.trim()).filter(Boolean)
       };
 
@@ -213,20 +261,63 @@ const ListingForm = () => {
                       <input name="nearestCollege" value={formData.nearestCollege} onChange={handleChange} className="w-full px-4 py-3 bg-bg-surface border border-glass-border rounded-lg text-sm text-text-primary focus:ring-2 focus:ring-accent-warm outline-none transition-all" placeholder="e.g. Christ University" />
                     </div>
                     
-                    <div className="bg-bg-surface/50 p-5 rounded-xl border border-glass-border mt-4">
-                      <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center">
-                        Map Coordinates (Optional)
-                      </h3>
+                    <div className="bg-bg-surface/50 p-5 rounded-xl border border-glass-border mt-4 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h3 className="text-sm font-bold text-text-primary flex items-center">
+                          Map Coordinates (Optional)
+                        </h3>
+                        <button
+                          type="button"
+                          disabled={geocodingLoading}
+                          onClick={handleFetchCoordinates}
+                          className="px-3 py-1 bg-text-primary text-bg-base hover:bg-white text-xs font-semibold rounded-lg transition-all focus:ring-2 focus:ring-accent-warm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed w-fit"
+                        >
+                          {geocodingLoading ? (
+                            <>
+                              <svg className="animate-spin h-3.5 w-3.5 text-bg-base" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                              Detecting...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                              Detect from Address
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {geocodingError && (
+                        <p className="text-xs text-accent-warm italic bg-accent-warm/5 p-2.5 rounded-lg border border-accent-warm/25 animate-pulse">
+                          {geocodingError}
+                        </p>
+                      )}
+
                       <div className="grid grid-cols-2 gap-6">
                         <div>
                           <label className="block text-xs font-bold text-text-tertiary mb-2">Latitude</label>
-                          <input name="latitude" type="number" step="any" value={formData.latitude} onChange={handleChange} className="w-full px-4 py-2.5 bg-bg-base border border-glass-border rounded-lg text-sm text-text-primary focus:ring-2 focus:ring-accent-warm outline-none" />
+                          <input name="latitude" type="number" step="any" value={formData.latitude} onChange={handleChange} className="w-full px-4 py-2.5 bg-bg-base border border-glass-border rounded-lg text-sm text-text-primary focus:ring-2 focus:ring-accent-warm outline-none" placeholder="e.g. 12.9716" />
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-text-tertiary mb-2">Longitude</label>
-                          <input name="longitude" type="number" step="any" value={formData.longitude} onChange={handleChange} className="w-full px-4 py-2.5 bg-bg-base border border-glass-border rounded-lg text-sm text-text-primary focus:ring-2 focus:ring-accent-warm outline-none" />
+                          <input name="longitude" type="number" step="any" value={formData.longitude} onChange={handleChange} className="w-full px-4 py-2.5 bg-bg-base border border-glass-border rounded-lg text-sm text-text-primary focus:ring-2 focus:ring-accent-warm outline-none" placeholder="e.g. 77.5946" />
                         </div>
                       </div>
+
+                      {formData.latitude && formData.longitude && !isNaN(parseFloat(formData.latitude)) && !isNaN(parseFloat(formData.longitude)) && (
+                        <div className="mt-4">
+                          <label className="block text-xs font-bold text-text-tertiary mb-2">Location Preview</label>
+                          <div className="w-full h-40 bg-bg-surface rounded-xl overflow-hidden border border-glass-border shadow-inner">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              frameBorder="0"
+                              style={{ border: 0 }}
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(formData.longitude) - 0.005}%2C${parseFloat(formData.latitude) - 0.005}%2C${parseFloat(formData.longitude) + 0.005}%2C${parseFloat(formData.latitude) + 0.005}&layer=mapnik&marker=${parseFloat(formData.latitude)}%2C${parseFloat(formData.longitude)}`}
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -17,6 +17,7 @@ import Roommates from './pages/Roommates';
 import Expenses from './pages/Expenses';
 import Notifications from './pages/Notifications';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 
 function App() {
   return (
@@ -94,6 +95,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['owner']}>
                     <ManageListings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/owner/analytics" 
+                element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <OwnerDashboard />
                   </ProtectedRoute>
                 } 
               />
