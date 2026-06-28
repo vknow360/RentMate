@@ -4,6 +4,14 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import AnimatedSection from '../components/AnimatedSection';
 
+const CITY_COORDINATES = {
+  'delhi': { lat: 28.6139, lng: 77.2090 },
+  'mumbai': { lat: 19.0760, lng: 72.8777 },
+  'bangalore': { lat: 12.9716, lng: 77.5946 },
+  'pune': { lat: 18.5204, lng: 73.8567 },
+  'hyderabad': { lat: 17.3850, lng: 78.4867 }
+};
+
 const PropertyDetail = () => {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
@@ -19,6 +27,78 @@ const PropertyDetail = () => {
   const [reviewsData, setReviewsData] = useState({ reviews: [], averageRating: 0, totalReviews: 0 });
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [reviewStatus, setReviewStatus] = useState({ sending: false, error: '' });
+
+  const [mapCoords, setMapCoords] = useState({ lat: null, lng: null });
+
+  useEffect(() => {
+    if (property) {
+      const cityKey = (property.city || '').toLowerCase().trim();
+      const defaultCoords = CITY_COORDINATES[cityKey] || { lat: 20.5937, lng: 78.9629 };
+
+      const dbLat = parseFloat(property.latitude);
+      const dbLng = parseFloat(property.longitude);
+
+      const isMismatched =
+        cityKey !== 'delhi' &&
+        dbLat >= 28.0 && dbLat <= 29.0 &&
+        dbLng >= 77.0 && dbLng <= 78.0;
+
+      const isCoordsDefault =
+        defaultCoords &&
+        Math.abs(dbLat - defaultCoords.lat) < 0.0001 &&
+        Math.abs(dbLng - defaultCoords.lng) < 0.0001;
+
+      const hasRealDbLocation =
+        !isNaN(dbLat) &&
+        !isNaN(dbLng) &&
+        dbLat !== 0 &&
+        dbLng !== 0 &&
+        !isMismatched &&
+        !isCoordsDefault;
+
+      if (hasRealDbLocation) {
+        // DB has real location. Point directly to it and don't query Nominatim.
+        setMapCoords({ lat: dbLat, lng: dbLng });
+      } else {
+        // DB location doesn't exist or is default. Let's geocode using Nominatim to find a real location.
+        const queryFull = `${property.locality || ''}, ${property.city || ''}`;
+        
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryFull)}&limit=1`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && data.length > 0) {
+              setMapCoords({
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon)
+              });
+            } else {
+              // Try searching only for the city if full query failed
+              fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(property.city || '')}&limit=1`)
+                .then((res2) => res2.json())
+                .then((data2) => {
+                  if (data2 && data2.length > 0) {
+                    setMapCoords({
+                      lat: parseFloat(data2[0].lat),
+                      lng: parseFloat(data2[0].lon)
+                    });
+                  } else {
+                    // Final fallback to city default
+                    setMapCoords({ lat: defaultCoords.lat, lng: defaultCoords.lng });
+                  }
+                })
+                .catch((err) => {
+                  console.error('City-only geocoding error:', err);
+                  setMapCoords({ lat: defaultCoords.lat, lng: defaultCoords.lng });
+                });
+            }
+          })
+          .catch((err) => {
+            console.error('Full geocoding error:', err);
+            setMapCoords({ lat: defaultCoords.lat, lng: defaultCoords.lng });
+          });
+      }
+    }
+  }, [property]);
 
   useEffect(() => {
     const fetchPropertyAndWishlist = async () => {
@@ -210,7 +290,7 @@ const PropertyDetail = () => {
           </AnimatedSection>
 
           {/* Location Map */}
-          {property.latitude && property.longitude && (
+          {mapCoords.lat && mapCoords.lng && (
             <AnimatedSection direction="up" delay={400}>
               <section className="glass-card p-6 sm:p-8">
                 <h2 className="text-lg font-bold font-heading uppercase tracking-wider text-accent-warm mb-6 flex items-center gap-2">
@@ -223,7 +303,7 @@ const PropertyDetail = () => {
                     height="100%"
                     frameBorder="0"
                     style={{ border: 0 }}
-                    src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_MAPS_API_KEY || 'YOUR_API_KEY'}&q=${property.latitude},${property.longitude}`}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoords.lng - 0.005}%2C${mapCoords.lat - 0.005}%2C${mapCoords.lng + 0.005}%2C${mapCoords.lat + 0.005}&layer=mapnik&marker=${mapCoords.lat}%2C${mapCoords.lng}`}
                     allowFullScreen
                   ></iframe>
                 </div>

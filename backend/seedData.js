@@ -136,13 +136,35 @@ const seedData = async () => {
       const numAmenities = faker.number.int({ min: 2, max: 8 });
       const propertyAmenities = faker.helpers.arrayElements(allAmenities, numAmenities);
 
+      const chosenCity = faker.helpers.arrayElement(cities);
+      let cityLat, cityLng;
+      if (chosenCity === 'Delhi') {
+        cityLat = faker.location.latitude({ max: 28.7, min: 28.5 });
+        cityLng = faker.location.longitude({ max: 77.3, min: 77.1 });
+      } else if (chosenCity === 'Mumbai') {
+        cityLat = faker.location.latitude({ max: 19.2, min: 18.9 });
+        cityLng = faker.location.longitude({ max: 73.0, min: 72.8 });
+      } else if (chosenCity === 'Bangalore') {
+        cityLat = faker.location.latitude({ max: 13.1, min: 12.9 });
+        cityLng = faker.location.longitude({ max: 77.7, min: 77.5 });
+      } else if (chosenCity === 'Pune') {
+        cityLat = faker.location.latitude({ max: 18.6, min: 18.4 });
+        cityLng = faker.location.longitude({ max: 74.0, min: 73.8 });
+      } else if (chosenCity === 'Hyderabad') {
+        cityLat = faker.location.latitude({ max: 17.5, min: 17.3 });
+        cityLng = faker.location.longitude({ max: 78.6, min: 78.4 });
+      } else {
+        cityLat = 20.5937;
+        cityLng = 78.9629;
+      }
+
       fakeProperties.push({
         ownerId: owner._id,
         title: faker.lorem.words({ min: 3, max: 7 }),
         description: faker.lorem.paragraph(),
         rent: faker.number.int({ min: 5000, max: 40000 }),
         deposit: faker.number.int({ min: 5000, max: 80000 }),
-        city: faker.helpers.arrayElement(cities),
+        city: chosenCity,
         locality: faker.location.street(),
         nearestCollege: faker.helpers.arrayElement(colleges),
         propertyType: faker.helpers.arrayElement(propTypes),
@@ -151,8 +173,8 @@ const seedData = async () => {
         isVerified: faker.datatype.boolean({ probability: 0.7 }),
         amenities: propertyAmenities,
         images: images,
-        latitude: faker.location.latitude({ max: 28.7, min: 28.5 }),
-        longitude: faker.location.longitude({ max: 77.3, min: 77.1 })
+        latitude: cityLat,
+        longitude: cityLng
       });
     }
 
